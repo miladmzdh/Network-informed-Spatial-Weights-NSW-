@@ -33,6 +33,7 @@ Clone the repository and install dependencies:
 git clone https://github.com/USERNAME/network-informed-spatial-weights.git
 cd network-informed-spatial-weights
 pip install -r requirements.txt
+```
 
 Requirements
 Main dependencies:
