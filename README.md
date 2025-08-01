@@ -35,82 +35,97 @@ cd network-informed-spatial-weights
 pip install -r requirements.txt
 ```
 
-Requirements
-Main dependencies:
+## Requirements
 
-Python 3.9+
+- Python 3.9+
+- networkx
+- pandas
+- numpy
+- libpysal
+- spreg
+- scikit-learn
+- matplotlib (optional, for visualizations)
 
-networkx
+## Function Documentation
 
-pandas
-
-numpy
-
-libpysal
-
-spreg
-
-scikit-learn
-
-matplotlib (optional, for visualizations)
-
-Function Documentation
-run_sem_with_community_weights
+### `run_sem_with_community_weights`
 Runs the full pipeline for constructing network-informed spatial weights, estimating a spatial error model, and performing optional endogeneity testing and correction.
 
-Parameters:
+**Parameters:**
+- `nodes` (`pd.DataFrame`): Table of spatial units and associated attributes.
+- `flows` (`pd.DataFrame`): Table of directed flows with origin, destination, and weight.
+- `id_col` (`str`): Column in `nodes` containing unique IDs for spatial units.
+- `target_col` (`str`): Name of dependent variable column in `nodes`.
+- `feature_cols` (`Sequence[str]`): List of independent variable column names in `nodes`.
+- `origin_col` (`str`): Column in `flows` with origin node IDs.
+- `dest_col` (`str`): Column in `flows` with destination node IDs.
+- `weight_col` (`str`): Column in `flows` with flow weights.
+- `community_method` (`str`): Overlapping community detection method. Options:
+  - `"leiden_multiplex"` (default, recommended)
+  - `"oslom"`
+  - `"weighted_cliques"`
+  - `"ego_splitting"`
+- `community_kwargs` (`dict`): Extra parameters for community detection.
+- `sem_kwargs` (`dict`): Extra parameters for spatial econometric model estimation.
+- `Z` (`np.ndarray`, optional): Variables driving W formation (for formal endogeneity test).
+- `X2` (`np.ndarray`, optional): Exogenous predictors for Z.
+- `n_pca_components` (`int`): PCA components to use for correction if endogenous and no Z provided (default 1).
+- `test_endogeneity` (`bool`): Whether to perform endogeneity test (default True).
 
-nodes (pd.DataFrame): Table of spatial units and associated attributes.
+**Returns:**
+`dict` containing:
+- `'base_model'`: Initial spatial error model.
+- `'corrected_model'`: Endogeneity-corrected model (if applied).
+- `'endogeneity_test'`: Test results dictionary.
+- `'primary'`: Primary community assignments.
+- `'W'`: Spatial weights matrix.
+- `'G'`: Flow graph.
+- `'overlaps'`: Overlapping community memberships.
 
-flows (pd.DataFrame): Table of directed flows with origin, destination, and weight.
 
-id_col (str): Column in nodes containing unique IDs for spatial units.
+## Usage Example
 
-target_col (str): Name of dependent variable column in nodes.
+```python
+from NSW import run_sem_with_community_weights
 
-feature_cols (Sequence[str]): List of independent variable column names in nodes.
+results = run_sem_with_community_weights(
+    nodes=nodes_df,
+    flows=flows_df,
+    target_col="gdp",
+    feature_cols=["broadband_access", "high_tech_employment"],
+    community_method="leiden_multiplex",
+    sem_kwargs={"spat_diag": True}
+)
 
-origin_col (str): Column in flows with origin node IDs.
+# Access results
+base_model = results['base_model']
+corrected_model = results['corrected_model']
+endogeneity_test = results['endogeneity_test']
 
-dest_col (str): Column in flows with destination node IDs.
+print(f"Endogeneity detected: {endogeneity_test['is_endogenous']}")
+print(f"P-value: {endogeneity_test['p_value']}")
+```
 
-weight_col (str): Column in flows with flow weights.
+## Example Applications
 
-community_method (str): Overlapping community detection method. Options:
+- Regional economic performance modeling with commuting or trade flows.
+- Innovation diffusion analysis based on R&D collaboration networks.
+- Environmental spillover studies using shared resource or pollution networks.
+- Transport accessibility studies with origin–destination flow data.
 
-"leiden_multiplex" (default, recommended)
 
-"oslom"
+## Data Availability
 
-"weighted_cliques"
+The methodology can be applied to any node–flow dataset where edges represent meaningful functional linkages between spatial units. Due to licensing restrictions, the dataset used in the associated publication cannot be shared. Example code is provided for demonstration purposes with placeholder or synthetic data.
 
-"ego_splitting"
 
-community_kwargs (dict): Extra parameters for community detection.
+## Citation
 
-sem_kwargs (dict): Extra parameters for spatial econometric model estimation.
+If you use this code in your research, please cite:
 
-Z (np.ndarray, optional): Variables driving W formation (for formal endogeneity test).
+> CITATION WHEN PUBLISHED
 
-X2 (np.ndarray, optional): Exogenous predictors for Z.
+## License
 
-n_pca_components (int): PCA components to use for correction if endogenous and no Z provided (default 1).
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
 
-test_endogeneity (bool): Whether to perform endogeneity test (default True).
-
-Returns:
-dict containing:
-
-'base_model': Initial spatial error model.
-
-'corrected_model': Endogeneity-corrected model (if applied).
-
-'endogeneity_test': Test results dictionary.
-
-'primary': Primary community assignments.
-
-'W': Spatial weights matrix.
-
-'G': Flow graph.
-
-'overlaps': Overlapping community memberships.
